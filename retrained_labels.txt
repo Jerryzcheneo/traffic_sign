@@ -1,0 +1,5 @@
+backgroud
+left
+right
+slow
+stop
