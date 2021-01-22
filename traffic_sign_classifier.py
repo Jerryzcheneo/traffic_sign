@@ -70,23 +70,23 @@ def pinStatus(pin,status,gpio_logic):
         if status=='LOW':
             pin.off()
 
-def send_signal_to_pins(processed_result,gpio_logic):
-    if processed_result == 'stop':
+def send_signal_to_pins(signal,gpio_logic):
+    if signal == 3:
         pinStatus(pin_A,'LOW',gpio_logic)
         pinStatus(pin_B,'LOW',gpio_logic)
         pinStatus(pin_C,'LOW',gpio_logic)
         leds.update(Leds.rgb_on(RED))
-    elif processed_result == 'right':
+    elif signal == 2:
         pinStatus(pin_A,'LOW',gpio_logic)
         pinStatus(pin_B,'LOW',gpio_logic)
         pinStatus(pin_C,'HIGH',gpio_logic)
         leds.update(Leds.rgb_on(BLUE))
-    elif processed_result == 'left':
+    elif signal == 1:
         pinStatus(pin_A,'LOW',gpio_logic)
         pinStatus(pin_B,'HIGH',gpio_logic)
         pinStatus(pin_C,'LOW',gpio_logic)
         leds.update(Leds.rgb_on(PURPLE))
-    elif processed_result == 'slow':
+    elif signal == 4:
         pinStatus(pin_A,'LOW',gpio_logic)
         pinStatus(pin_B,'HIGH',gpio_logic)
         pinStatus(pin_C,'HIGH',gpio_logic)
@@ -123,6 +123,18 @@ def process(result, labels, tensor_name, threshold, top_k):
     pairs = pairs[0:top_k]
     return [' %s (%.2f)' % (labels[index], prob) for index, prob in pairs]
 
+def label(processed_result):
+    if processed_result is 'backgroud':
+        return 0
+    elif processed_result is 'left':
+        return 1
+    elif processed_result is 'right':
+        return 2
+    elif processed_result is 'stop':
+        return 3
+    else processed_result is 'slow':
+        return 4
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -148,6 +160,8 @@ def main():
         help='Shows end to end FPS.')
     parser.add_argument('--gpio_logic', default='NORMAL',
         help='Indicates if NORMAL or INVERSE logic is used in GPIO pins.')
+    parser.add_argument('--signal', type=int, default=0,
+        help='Convert labels to pin signal.')
     args = parser.parse_args()
 
     model = inference.ModelDescriptor(
@@ -165,7 +179,8 @@ def main():
             for result in camera_inference.run(args.num_frames):
                 processed_result = process(result, labels, args.output_layer,
                                            args.threshold, args.top_k)
-                send_signal_to_pins(processed_result,args.gpio_logic)
+                signal = labal(processed_result)
+                send_signal_to_pins(signal, args.gpio_logic)
                 message = get_message(processed_result, args.threshold, args.top_k)
                 if args.show_fps:
                     message += '\nWith %.1f FPS.' % camera_inference.rate
