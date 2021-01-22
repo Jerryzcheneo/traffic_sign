@@ -134,8 +134,8 @@ def label(processed_result):
         return 3
     elif processed_result is 'slow':
         return 4
-    else
-        return 5
+    else:
+        return 0
 
 
 def main():
@@ -181,7 +181,7 @@ def main():
             for result in camera_inference.run(args.num_frames):
                 processed_result = process(result, labels, args.output_layer,
                                            args.threshold, args.top_k)
-                signal = labal(processed_result)
+                signal = label(processed_result)
                 send_signal_to_pins(signal, args.gpio_logic)
                 message = get_message(processed_result, args.threshold, args.top_k)
                 if args.show_fps:
