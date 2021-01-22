@@ -32,15 +32,15 @@ from picamera import PiCamera, Color
 
 from aiy.vision import inference
 from time import time, strftime
-from aiy.vision.leds import Leds
-from aiy.vision.leds import PrivacyLed
+from aiy.leds import Leds
+from aiy.leds import PrivacyLed
 from aiy.vision.models import utils
 from gpiozero import Button
-from aiy.vision.pins import BUTTON_GPIO_PIN
+from aiy.pins import BUTTON_GPIO_PIN
 from gpiozero import LED
-from aiy.vision.pins import PIN_A
-from aiy.vision.pins import PIN_B
-from aiy.vision.pins import PIN_C
+from aiy.pins import PIN_A
+from aiy.pins import PIN_B
+from aiy.pins import PIN_C
 
 
 # Initialize the GPIO pins A,B,C
