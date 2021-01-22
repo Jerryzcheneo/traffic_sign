@@ -143,6 +143,8 @@ def main():
         help='Enables camera preview in addition to printing result to terminal.')
     parser.add_argument('--show_fps', action='store_true', default=False,
         help='Shows end to end FPS.')
+    parser.add_argument('--gpio_logic', default='NORMAL',
+        help='Indicates if NORMAL or INVERSE logic is used in GPIO pins.')
     args = parser.parse_args()
 
     model = inference.ModelDescriptor(
