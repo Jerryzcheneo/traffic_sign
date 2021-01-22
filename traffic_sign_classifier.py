@@ -27,11 +27,11 @@ index  label           function        pin_A pin_B pin_C
 """
 
 import argparse
+import time
 
 from picamera import PiCamera, Color
 
 from aiy.vision import inference
-from time import time, strftime
 from aiy.leds import Leds
 from aiy.leds import PrivacyLed
 from aiy.vision.models import utils
@@ -42,6 +42,9 @@ from aiy.pins import PIN_A
 from aiy.pins import PIN_B
 from aiy.pins import PIN_C
 
+# Initialize LED (in the button on the top of AIY Google Vision box)
+leds = Leds()
+leds.update(Leds.rgb_off())
 
 # Initialize the GPIO pins A,B,C
 pin_A = LED(PIN_A)
@@ -162,7 +165,7 @@ def main():
             for result in camera_inference.run(args.num_frames):
                 processed_result = process(result, labels, args.output_layer,
                                            args.threshold, args.top_k)
-                send_signal_to_pins(processed_result,gpio_logic)
+                send_signal_to_pins(processed_result,args.gpio_logic)
                 message = get_message(processed_result, args.threshold, args.top_k)
                 if args.show_fps:
                     message += '\nWith %.1f FPS.' % camera_inference.rate
