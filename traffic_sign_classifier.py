@@ -134,6 +134,8 @@ def label(processed_result):
         return 3
     elif processed_result is 'slow':
         return 4
+    else
+        return 5
 
 
 def main():
