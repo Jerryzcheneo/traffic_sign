@@ -132,7 +132,7 @@ def label(processed_result):
         return 2
     elif processed_result is 'stop':
         return 3
-    else processed_result is 'slow':
+    elif processed_result is 'slow':
         return 4
 
 
