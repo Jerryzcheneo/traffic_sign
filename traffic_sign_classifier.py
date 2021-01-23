@@ -13,27 +13,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 Script to run generic MobileNet based classification model.
 Modified for traffic sign classification.
-
-index  label           function        pin_A pin_B pin_C
-0      background      move forward    1     0     0
-1      left            turn 90 degree  0     1     0 
-2      right           turn -90 degree 0     0     1
-3      stop            stop            0     0     0
-4      slow            slow speed      0     1     1
-
 """
+
 
 import argparse
 import time
 
 from picamera import PiCamera, Color
-
 from aiy.vision import inference
 from aiy.leds import Leds
-from aiy.leds import PrivacyLed
 from aiy.vision.models import utils
 from gpiozero import Button
 from aiy.pins import BUTTON_GPIO_PIN
@@ -42,20 +34,24 @@ from aiy.pins import PIN_A
 from aiy.pins import PIN_B
 from aiy.pins import PIN_C
 
+
 # Initialize LED (in the button on the top of AIY Google Vision box)
 leds = Leds()
 leds.update(Leds.rgb_off())
+
 
 # Initialize the GPIO pins A,B,C
 pin_A = LED(PIN_A)
 pin_B = LED(PIN_B)
 pin_C = LED(PIN_C)
 
+
 # Colors used for LED at the top of Google Vision AIY kit
 RED = (0xFF, 0x00, 0x00)
 GREEN = (0x00, 0xFF, 0x00)
 BLUE = (0x00, 0x00, 0xFF)
 PURPLE = (0xFF, 0x00, 0xFF)
+
 
 # Set status of GPIO pin
 def pinStatus(pin,status,gpio_logic):
@@ -69,24 +65,34 @@ def pinStatus(pin,status,gpio_logic):
             pin.on()
         if status=='LOW':
             pin.off()
+ 
 
-def send_signal_to_pins(signal,gpio_logic):
-    if signal == 3:
+"""
+index  label           function        pin_A pin_B pin_C
+0      stop            stop            0     0     0
+1      left            turn 90 degree  0     1     0 
+2      right           turn -90 degree 0     0     1
+3      slow            slow speed      0     1     1
+4      background      move forward    1     0     0
+"""
+# Convert the most likely result to 3 binary signal and sent it out
+def send_signal_to_pins(resuilt0,gpio_logic):
+    if 'stop' in result0:
         pinStatus(pin_A,'LOW',gpio_logic)
         pinStatus(pin_B,'LOW',gpio_logic)
         pinStatus(pin_C,'LOW',gpio_logic)
         leds.update(Leds.rgb_on(RED))
-    elif signal == 2:
+    elif 'left' in result0:
         pinStatus(pin_A,'LOW',gpio_logic)
         pinStatus(pin_B,'LOW',gpio_logic)
         pinStatus(pin_C,'HIGH',gpio_logic)
         leds.update(Leds.rgb_on(BLUE))
-    elif signal == 1:
+    elif 'right' in result0:
         pinStatus(pin_A,'LOW',gpio_logic)
         pinStatus(pin_B,'HIGH',gpio_logic)
         pinStatus(pin_C,'LOW',gpio_logic)
         leds.update(Leds.rgb_on(PURPLE))
-    elif signal == 4:
+    elif 'slow' in result0:
         pinStatus(pin_A,'LOW',gpio_logic)
         pinStatus(pin_B,'HIGH',gpio_logic)
         pinStatus(pin_C,'HIGH',gpio_logic)
@@ -96,9 +102,10 @@ def send_signal_to_pins(signal,gpio_logic):
         pinStatus(pin_B,'LOW',gpio_logic)
         pinStatus(pin_C,'LOW',gpio_logic)
         leds.update(Leds.rgb_off())
-    time.sleep(0.1)
+    time.sleep(1)
 
 
+# Get label names from retrained_labels.txt
 def read_labels(label_path):
     with open(label_path) as label_file:
         return [label.strip() for label in label_file.readlines()]
@@ -122,20 +129,6 @@ def process(result, labels, tensor_name, threshold, top_k):
     pairs = sorted(pairs, key=lambda pair: pair[1], reverse=True)
     pairs = pairs[0:top_k]
     return [' %s (%.2f)' % (labels[index], prob) for index, prob in pairs]
-
-def label(processed_result):
-    if processed_result is 'backgroud':
-        return 0
-    elif processed_result is 'left':
-        return 1
-    elif processed_result is 'right':
-        return 2
-    elif processed_result is 'stop':
-        return 3
-    elif processed_result is 'slow':
-        return 4
-    else:
-        return 0
 
 
 def main():
@@ -162,8 +155,6 @@ def main():
         help='Shows end to end FPS.')
     parser.add_argument('--gpio_logic', default='NORMAL',
         help='Indicates if NORMAL or INVERSE logic is used in GPIO pins.')
-    parser.add_argument('--signal', type=int, default=0,
-        help='Convert labels to pin signal.')
     args = parser.parse_args()
 
     model = inference.ModelDescriptor(
@@ -181,8 +172,7 @@ def main():
             for result in camera_inference.run(args.num_frames):
                 processed_result = process(result, labels, args.output_layer,
                                            args.threshold, args.top_k)
-                signal = label(processed_result)
-                send_signal_to_pins(signal, args.gpio_logic)
+                send_signal_to_pins(processed_result[0], args.gpio_logic)
                 message = get_message(processed_result, args.threshold, args.top_k)
                 if args.show_fps:
                     message += '\nWith %.1f FPS.' % camera_inference.rate
