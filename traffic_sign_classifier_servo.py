@@ -29,21 +29,14 @@ from aiy.leds import Leds
 from aiy.vision.models import utils
 from gpiozero import Button
 from aiy.pins import BUTTON_GPIO_PIN
-from gpiozero import LED
+from gpiozero import Servo
 from aiy.pins import PIN_A
 from aiy.pins import PIN_B
-from aiy.pins import PIN_C
 
 
 # Initialize LED (in the button on the top of AIY Google Vision box)
 leds = Leds()
 leds.update(Leds.rgb_off())
-
-
-# Initialize the GPIO pins A,B,C
-pin_A = LED(PIN_A)
-pin_B = LED(PIN_B)
-pin_C = LED(PIN_C)
 
 
 # Colors used for LED at the top of Google Vision AIY kit
@@ -53,56 +46,42 @@ BLUE = (0x00, 0x00, 0xFF)
 PURPLE = (0xFF, 0x00, 0xFF)
 
 
-# Set status of GPIO pin
-def pinStatus(pin,status,gpio_logic):
-    if gpio_logic=='INVERSE':
-        if status=='HIGH':
-            pin.off()
-        if status=='LOW':
-            pin.on()
-    else:
-        if status=='HIGH':
-            pin.on()
-        if status=='LOW':
-            pin.off()
- 
+# Create a servo with the custom values to give the full dynamic range.
+tuned_servoA = Servo(PIN_A, min_pulse_width=.0005, max_pulse_width=.0019)
+tuned_servoB = Servo(PIN_B, min_pulse_width=.0005, max_pulse_width=.0019)
+
 
 """
-index  label           function        pin_A pin_B pin_C
-0      stop            stop            0     0     0
-1      left            turn 90 degree  0     1     0 
-2      right           turn -90 degree 0     0     1
-3      slow            slow speed      0     1     1
-4      background      move forward    1     0     0
+index  label           function        servo_A servo_B 
+0      stop            stop            mid     mid     
+1      left            turn 90 degree  max     min      
+2      right           turn -90 degree min     max    
+3      slow            slow speed      0.5     0.5     
+4      background      move forward    max     max     
 """
 # Convert the most likely result to 3 binary signal and sent it out
-def send_signal_to_pins(resuilt0,gpio_logic):
+def send_signal_to_servos(resuilt0):
     if 'stop' in result0:
-        pinStatus(pin_A,'LOW',gpio_logic)
-        pinStatus(pin_B,'LOW',gpio_logic)
-        pinStatus(pin_C,'LOW',gpio_logic)
+        tuned_servoA.mid() 
+        tuned_servoB.mid()
         leds.update(Leds.rgb_on(RED))
     elif 'left' in result0:
-        pinStatus(pin_A,'LOW',gpio_logic)
-        pinStatus(pin_B,'LOW',gpio_logic)
-        pinStatus(pin_C,'HIGH',gpio_logic)
+        tuned_servoA.max() 
+        tuned_servoB.mid()
         leds.update(Leds.rgb_on(BLUE))
     elif 'right' in result0:
-        pinStatus(pin_A,'LOW',gpio_logic)
-        pinStatus(pin_B,'HIGH',gpio_logic)
-        pinStatus(pin_C,'LOW',gpio_logic)
+        tuned_servoA.mid() 
+        tuned_servoB.max()
         leds.update(Leds.rgb_on(PURPLE))
     elif 'slow' in result0:
-        pinStatus(pin_A,'LOW',gpio_logic)
-        pinStatus(pin_B,'HIGH',gpio_logic)
-        pinStatus(pin_C,'HIGH',gpio_logic)
+        tuned_servoA.value = 0.5 
+        tuned_servoB.value = 0.5
         leds.update(Leds.rgb_on(GREEN))
     else:
-        pinStatus(pin_A,'HIGH',gpio_logic)
-        pinStatus(pin_B,'LOW',gpio_logic)
-        pinStatus(pin_C,'LOW',gpio_logic)
+        tuned_servoA.max() 
+        tuned_servoB.max()
         leds.update(Leds.rgb_off())
-    time.sleep(1)
+    time.sleep(0.002)
 
 
 # Get label names from retrained_labels.txt
@@ -153,8 +132,6 @@ def main():
         help='Enables camera preview in addition to printing result to terminal.')
     parser.add_argument('--show_fps', action='store_true', default=False,
         help='Shows end to end FPS.')
-    parser.add_argument('--gpio_logic', default='NORMAL',
-        help='Indicates if NORMAL or INVERSE logic is used in GPIO pins.')
     args = parser.parse_args()
 
     model = inference.ModelDescriptor(
@@ -172,7 +149,7 @@ def main():
             for result in camera_inference.run(args.num_frames):
                 processed_result = process(result, labels, args.output_layer,
                                            args.threshold, args.top_k)
-                send_signal_to_pins(processed_result[0], args.gpio_logic)
+                send_signal_to_servos(processed_result[0])
                 message = get_message(processed_result, args.threshold, args.top_k)
                 if args.show_fps:
                     message += '\nWith %.1f FPS.' % camera_inference.rate
