@@ -60,7 +60,7 @@ index  label           function        servo_A servo_B
 4      background      move forward    max     max     
 """
 # Convert the most likely result to 3 binary signal and sent it out
-def send_signal_to_servos(resuilt0):
+def send_signal_to_servos(result0):
     if 'stop' in result0:
         tuned_servoA.value = 0.5 
         tuned_servoB.value = 0.5
