@@ -76,7 +76,7 @@ index  label           function        pin_A pin_B pin_C
 4      background      move forward    1     0     0
 """
 # Convert the most likely result to 3 binary signal and sent it out
-def send_signal_to_pins(resuilt0,gpio_logic):
+def send_signal_to_pins(result0,gpio_logic):
     if 'stop' in result0:
         pinStatus(pin_A,'LOW',gpio_logic)
         pinStatus(pin_B,'LOW',gpio_logic)
