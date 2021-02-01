@@ -78,8 +78,8 @@ def send_signal_to_servos(result0):
         tuned_servoB.value = 0.6
         leds.update(Leds.rgb_on(GREEN))
     else:
-        tuned_servoA.value = 0.8 
-        tuned_servoB.value = 0.8
+        tuned_servoA.max()
+        tuned_servoB.max()
         leds.update(Leds.rgb_off())
     time.sleep(0.002)
 
