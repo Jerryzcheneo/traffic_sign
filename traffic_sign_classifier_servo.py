@@ -62,8 +62,8 @@ index  label           function        servo_A servo_B
 # Convert the most likely result to 3 binary signal and sent it out
 def send_signal_to_servos(result0):
     if 'stop' in result0:
-        tuned_servoA.mid() 
-        tuned_servoB.mid()
+        tuned_servoA.value = 0.5
+        tuned_servoB.value = 0.5
         leds.update(Leds.rgb_on(RED))
     elif 'left' in result0:
         tuned_servoA.min() 
@@ -75,7 +75,7 @@ def send_signal_to_servos(result0):
         leds.update(Leds.rgb_on(PURPLE))
     elif 'slow' in result0:
         tuned_servoA.value = 0.6 
-        tuned_servoB.value = 0.6
+        tuned_servoB.value = 0.3
         leds.update(Leds.rgb_on(GREEN))
     else:
         tuned_servoA.max()
