@@ -15,11 +15,18 @@
 # limitations under the License.
 """Script to run generic MobileNet based classification model."""
 import argparse
+import time
 
 from picamera import PiCamera, Color
 
 from aiy.vision import inference
 from aiy.vision.models import utils
+from aiy.leds import Leds
+from gpiozero import Button
+from aiy.pins import BUTTON_GPIO_PIN
+from gpiozero import Servo
+from aiy.pins import PIN_A
+from aiy.pins import PIN_B
 
 
 def read_labels(label_path):
