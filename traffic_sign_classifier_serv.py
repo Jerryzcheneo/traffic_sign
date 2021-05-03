@@ -28,7 +28,40 @@ from gpiozero import Servo
 from aiy.pins import PIN_A
 from aiy.pins import PIN_B
 
+leds = Leds()
+leds.update(Leds.rgb_off())
 
+RED = (0xFF, 0x00, 0x00)
+GREEN = (0x00, 0xFF, 0x00)
+BLUE = (0x00, 0x00, 0xFF)
+PURPLE = (0xFF, 0x00, 0xFF)
+
+tuned_servoA = Servo(PIN_A, min_pulse_width=.0005, max_pulse_width=.0019)
+tuned_servoB = Servo(PIN_B, min_pulse_width=.0005, max_pulse_width=.0019)
+
+def send_signal_to_servos(result0):
+    if 'stop' in result0:
+        tuned_servoA.value = 0.5
+        tuned_servoB.value = 0.5
+        leds.update(Leds.rgb_on(RED))
+    elif 'left' in result0:
+        tuned_servoA.min() 
+        tuned_servoB.min()
+        leds.update(Leds.rgb_on(BLUE))
+    elif 'right' in result0:
+        tuned_servoA.max() 
+        tuned_servoB.max()
+        leds.update(Leds.rgb_on(PURPLE))
+     elif 'slow' in result0:
+        tuned_servoA.value = 0.6 
+        tuned_servoB.value = 0.3
+        leds.update(Leds.rgb_on(GREEN))
+     else:
+        tuned_servoA.max()
+        tuned_servoB.min()
+        leds.update(Leds.rgb_off())
+     time.sleep(0.002)
+            
 def read_labels(label_path):
     with open(label_path) as label_file:
         return [label.strip() for label in label_file.readlines()]
@@ -93,6 +126,7 @@ def main():
             for result in camera_inference.run(args.num_frames):
                 processed_result = process(result, labels, args.output_layer,
                                            args.threshold, args.top_k)
+                send_signal_to_servos(processed_result[0])
                 message = get_message(processed_result, args.threshold, args.top_k)
                 if args.show_fps:
                     message += '\nWith %.1f FPS.' % camera_inference.rate
