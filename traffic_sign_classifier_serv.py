@@ -36,31 +36,31 @@ GREEN = (0x00, 0xFF, 0x00)
 BLUE = (0x00, 0x00, 0xFF)
 PURPLE = (0xFF, 0x00, 0xFF)
 
-tuned_servoA = Servo(PIN_A, min_pulse_width=.0005, max_pulse_width=.0019)
-tuned_servoB = Servo(PIN_B, min_pulse_width=.0005, max_pulse_width=.0019)
+tuned_servoA = Servo(PIN_A)
+tuned_servoB = Servo(PIN_B)
 
-def send_signal_to_servos(result0):
+ddef send_signal_to_servos(result0):
     if 'stop' in result0:
-        tuned_servoA.value = 0.5
-        tuned_servoB.value = 0.5
+        tuned_servoA.value = 0
+        tuned_servoB.value = 0
         leds.update(Leds.rgb_on(RED))
     elif 'left' in result0:
-        tuned_servoA.min() 
-        tuned_servoB.min()
+        tuned_servoA.value = -0.8
+        tuned_servoB.value = -0.8
         leds.update(Leds.rgb_on(BLUE))
     elif 'right' in result0:
-        tuned_servoA.max() 
-        tuned_servoB.max()
+        tuned_servoA.value = 0.8
+        tuned_servoB.value = 0.8
         leds.update(Leds.rgb_on(PURPLE))
-     elif 'slow' in result0:
-        tuned_servoA.value = 0.6 
-        tuned_servoB.value = 0.3
+    elif 'slow' in result0:
+        tuned_servoA.value = 0.2 
+        tuned_servoB.value = -0.2
         leds.update(Leds.rgb_on(GREEN))
-     else:
-        tuned_servoA.max()
-        tuned_servoB.min()
+    else:
+        tuned_servoA.value = 0.4 
+        tuned_servoB.value = -0.4
         leds.update(Leds.rgb_off())
-     time.sleep(0.002)
+    time.sleep(0.2)
             
 def read_labels(label_path):
     with open(label_path) as label_file:
